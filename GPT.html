@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Modal</title>
+    <style>
+        /* Estilo do corpo */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-image: url('https://thumbs.dreamstime.com/z/fundo-do-androide-cyborg-da-mulher-fic%C3%A7%C3%A3o-cient%C3%ADfica-rob%C3%B4-tecnologia-intelig%C3%AAncia-artificial-wallpaper-d-humanoid-para-render-150583532.jpg');
+            background-size: cover; /* Para cobrir toda a tela */
+            background-repeat: no-repeat; /* Não repetir a imagem */
+            animation: moveBackground 10s linear infinite; /* Animação para o fundo */
+        }
+
+        /* Keyframes para a animação do fundo */
+        @keyframes moveBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Botão "Dúvidas?" */
+        #duvidas-btn {
+            padding: 15px 30px; /* Botão maior */
+            font-size: 18px; /* Aumentar tamanho da fonte */
+            background-color: rgba(33, 150, 243, 0.9); /* Azul mais forte com transparência */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative; /* Para centralizar no flexbox */
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Sombra para se sobressair */
+            transition: background-color 0.3s; /* Transição suave na mudança de cor */
+        }
+
+        #duvidas-btn:hover {
+            background-color: rgba(33, 150, 243, 1); /* Azul sólido ao passar o mouse */
+        }
+
+        /* Estilo do modal */
+        .modal {
+            display: none; /* Escondido por padrão */
+            position: fixed; 
+            z-index: 1000;
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Fundo do modal mais opaco */
+        }
+
+        /* Conteúdo do modal */
+        .modal-content {
+            background-color: #ffffff; /* Fundo branco para melhor legibilidade */
+            margin: 5% auto;
+            padding: 20px;
+            border: 2px solid #007BFF; /* Borda azul mais pronunciada */
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Sombra mais pronunciada */
+        }
+
+        /* Estilo do título */
+        h2 {
+            color: #333; /* Cor do texto do título */
+            text-align: center; /* Centraliza o título */
+        }
+
+        /* Botão para fechar o modal */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Chat box */
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 5px; /* Bordas arredondadas */
+        }
+
+        #user-input {
+            width: calc(100% - 50px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0; /* Cor de fundo clara para o input */
+        }
+
+        #send-btn {
+            padding: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Botão "Dúvidas?" -->
+<button id="duvidas-btn">Dúvidas?</button>
+
+<!-- Modal para o chat -->
+<div id="chat-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>ChatGPT - Pergunte suas dúvidas!</h2>
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Escreva sua pergunta aqui..." />
+        <button id="send-btn">Enviar</button>
+    </div>
+</div>
+
+<script>
+    // Referências aos elementos
+    const modal = document.getElementById("chat-modal");
+    const btn = document.getElementById("duvidas-btn");
+    const span = document.getElementsByClassName("close")[0];
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    // Quando o usuário clica no botão, o modal é aberto
+    btn.onclick = function() {
+        modal.style.display = "block";
+    }
+
+    // Quando o usuário clica no X, o modal é fechado
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // Quando o usuário clica fora do modal, ele é fechado
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Função para exibir a mensagem do usuário e a resposta
+    function addMessageToChat(role, message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = `${role}: ${message}`;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Função para lidar com o envio da pergunta e receber a resposta da API
+    sendBtn.onclick = async function() {
+        const question = userInput.value;
+        if (question) {
+            addMessageToChat("Usuário", question);
+            userInput.value = '';
+
+            // Envia a pergunta para a API do OpenAI
+            try {
+                const response = await fetch('/ask', { // Chamada para o servidor
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await response.json();
+                addMessageToChat("ChatGPT", data.answer);
+            } catch (error) {
+                addMessageToChat("ChatGPT", "Desculpe, ocorreu um erro ao buscar a resposta.");
+                console.error("Erro:", error);
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
